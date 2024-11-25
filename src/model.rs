@@ -167,34 +167,11 @@ fn mlp(
     rms_w: &Tensor<f32>,
     eps: f32,
 ) {
-    let mut hidden = Tensor::<f32>::default(residual.shape());
-    println!("{}",0);
-    hidden.print();
-    residual.print();
-    rms_w.print();
-    OP::rms_norm(&mut hidden, residual, rms_w, eps);
-    println!("{}",1);
-    hidden.print();
-    let mut _gate = Tensor::<f32>::default(&vec![hidden.shape()[0],gate.shape()[0]]);
-    OP::matmul_transb(&mut _gate, 0.0, &hidden, &gate, 1.0);
-    println!("{}",2);
-    _gate.print();
-    let mut _up = Tensor::<f32>::default(&vec![hidden.shape()[0],up.shape()[0]]);
-    OP::matmul_transb(&mut _up, 0.0, &hidden, &up, 1.0);
-    OP::silu(&mut _up, &_gate);
-    let intermediate = up;
-    let mut output = Tensor::<f32>::default(&vec![intermediate.shape()[0],w_down.shape()[0]]);
-    OP::matmul_transb(&mut output, 0.0, &intermediate, &w_down, 1.0);
-    let length = output.size();
-    let _residual = unsafe {
-        residual.data_mut()
-    };
-    let _output = unsafe {
-        output.data_mut()
-    };
-    for i in 0..length{
-        _residual[i] +=_output[i];
-    }
+    OP::rms_norm(hidden_states, residual, rms_w, eps);
+    OP::matmul_transb(gate, 0.0, &hidden_states, &w_gate, 1.0);
+    OP::matmul_transb(up, 0.0, &hidden_states, &w_up, 1.0);
+    OP::silu(up, gate);
+    OP::matmul_transb(residual, 1.0, up, &w_down, 1.0);
 }
 
 #[test]

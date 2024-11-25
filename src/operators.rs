@@ -117,13 +117,13 @@ pub fn matmul_transb(c: &mut Tensor<f32>, beta: f32, a: &Tensor<f32>, b: &Tensor
     let _k = a.shape()[1];
     for i in 0..row{
         for j in 0..col{
-            _c[i*row+j] = beta*_c[i*row+j];
+            
+            _c[i*col+j] = beta*_c[i*col+j];
             for k in 0.._k{
-                _c[i*row+j] += alpha * (_a[i*_k+k] * _b[k + _k*j]);
+                _c[i*col+j] += alpha * (_a[i*_k+k] * _b[k + _k*j]);
             }
         }
     }
-
 }
 
 // Dot product of two tensors (treated as vectors)
