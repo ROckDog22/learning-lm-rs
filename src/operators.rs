@@ -71,25 +71,59 @@ pub fn masked_softmax(y: &mut Tensor<f32>) {
 }
 
 pub fn rms_norm(y: &mut Tensor<f32>, x: &Tensor<f32>, w: &Tensor<f32>, epsilon: f32) {
-    todo!("实现 rms_norm，计算前做一些必要的检查会帮助你后续调试")
+    let len = y.size();
+    let _shape = y.shape();
+    let row = _shape[_shape.len()-2];
+    let col = _shape[_shape.len()-1];
+    assert!(len == x.size());
+    assert!(col == w.shape()[0]);
+    let _x = x.data();
+    let _y = unsafe {y.data_mut()};
+    let _w = w.data();
+    for i in 0..row{
+        let mut _total = 0.0f32;
+        for j in 0..col{
+            _total += _x[i*col + j] *_x[i*col + j];
+        }
+        _total = (_total / col as f32 + epsilon).sqrt();
+        for j in 0..col{
+            _y[i*col + j] = _w[j] *_x[i*col + j] / _total;
+        }
+    };
+
 }
 
 // y = sigmoid(x) * x * y
 // hint: this is an element-wise operation
-pub fn silu(y: &mut Tensor<f32>, x: &Tensor<f32>) {
-    // let len = y.size();
-    // assert!(len == x.size());
-
-    // let _y = unsafe { y.data_mut() };
-    // let _x = x.data();
-
-    todo!("实现 silu，这里给了一些前期准备工作的提示，你可以参考")
+pub fn silu(y: &mut Tensor<f32>, x: &Tensor<f32>){
+    let len = y.size();
+    assert!(len == x.size());
+    
+    let _y = unsafe { y.data_mut() };
+    let _x = x.data();
+    for i in 0..len{
+        _y[i] = (_y[i] * _x[i]) / (1.0 + f32::exp(-_x[i]));
+    }
 }
 
 // C = beta * C + alpha * A @ B^T
 // hint: You don't need to do an explicit transpose of B
 pub fn matmul_transb(c: &mut Tensor<f32>, beta: f32, a: &Tensor<f32>, b: &Tensor<f32>, alpha: f32) {
-    todo!("实现 matmul_transb，计算前做一些必要的检查会帮助你后续调试");
+    let row = c.shape()[0];
+    let col = c.shape()[1];
+    let _c = unsafe {c.data_mut()};
+    let _a = a.data();
+    let _b = b.data();
+    let _k = a.shape()[1];
+    for i in 0..row{
+        for j in 0..col{
+            
+            _c[i*col+j] = beta*_c[i*col+j];
+            for k in 0.._k{
+                _c[i*col+j] += alpha * (_a[i*_k+k] * _b[k + _k*j]);
+            }
+        }
+    }
 }
 
 // Dot product of two tensors (treated as vectors)
